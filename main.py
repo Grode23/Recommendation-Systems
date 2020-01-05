@@ -1,5 +1,6 @@
 import pandas as pd
 from collections import defaultdict
+from random import randint
 
 
 def get_from_csv(file_name):
@@ -30,18 +31,16 @@ def remove_books(ratings, books):
 
     isbns = [{"isbn": key, "count": value} for key, value in isbn_d.items()]
 
-    counter = 0
+    new_books = []
+
     for isbn in isbns:
-        counter += 1
-        if isbn["count"] < 10:
+        if isbn["count"] >= 10:
             for book in books:
                 if isbn["isbn"] == book[0]:
-                    books.remove(book)
+                    new_books.append(book)
                     break
-        if counter == 100:
-            break
 
-    return books
+    return new_books
 
 
 def remove_users(ratings, users):
@@ -52,32 +51,130 @@ def remove_users(ratings, users):
 
     users_pass = [{"id": key, "count": value} for key, value in users_d.items()]
 
-    print(len(users_pass))
+    new_users = []
 
-    counter = 0
     for user_pass in users_pass:
-        counter += 1
-        if user_pass["count"] < 5:
+        if user_pass["count"] >= 5:
             for user in users:
                 if user_pass["id"] == user[0]:
-                    users.remove(user)
+                    new_users.append(user)
                     break
-        if counter == 100:
-            break
 
-    return users
+    return new_users
+
+
+def remove_ratings(ratings, books, users):
+
+    new_ratings = []
+
+    # For every rating
+    for rating in ratings:
+        # If user exists and book exist too
+        if rating[0] in [i[0] for i in users] and rating[1] in [i[0] for i in books]:
+            # Keep that rating
+            new_ratings.append(rating)
+
+    return new_ratings
+
+
+def get_keywords_from_title(books):
+    keywords = []
+
+    for book in books:
+        keywords.append(book[1].split())
+
+    return keywords
+
+
+def get_favourites(book_ratings, users):
+    # Dictionary with users' id (key) and their favourite books' ISBN and personal rating (value of list)
+    preferences = {}
+
+    # Iterate through users
+    for user in users:
+
+        user_id = user[0]
+
+        # Item in dictionary for every user
+        preferences[user_id] = []
+
+        # Iterate through every rating to find ratings from this specific user
+        for rating in book_ratings:
+
+            # If the rating is from this user
+            if user_id == rating[0]:
+
+                to_be_inserted = [rating[1], rating[2]]
+
+                # Check if the user already has 3 favourites or not
+                if len(preferences[user_id]) < 3:
+
+                    # If he doesn't, insert this one
+                    preferences[user_id].append(to_be_inserted)
+                else:
+
+                    # if he does, go through these three
+                    for favourite in preferences[user_id]:
+
+                        # And check if the current rating is higher than a previous one
+                        if rating[2] > favourite[1]:
+                            preferences[user_id].remove(favourite)
+                            preferences[user_id].append(to_be_inserted)
+
+        print(preferences[user_id])
+
+    return preferences
+
+
+def get_preferences(favourites):
+
+    author = []
+    keywords_in_title = []
+    year_of_publication = []
+
+
+def get_random_users(users):
+    random_users = []
+
+    for i in range(3):
+        choices = randint(len(users))
+        random_users[i] = users.get(i)
+
+    return random_users
 
 
 def main():
-    users = get_from_csv("BX-Users.csv")
-    books = get_from_csv("BX-Books.csv")
+    users = get_from_csv("users1.csv")
+    books = get_from_csv("books1.csv")
     book_ratings = get_from_csv("BX-Book-Ratings.csv")
 
-    books = remove_books(book_ratings, books)
-    users = remove_users(book_ratings, users)
+    # Pre-treatment 1
 
-    write_to_csv('books.csv', books)
-    write_to_csv('users.csv', users)
+    # books = remove_books(book_ratings, books)
+    # print("Books were removed.")
+    # write_to_csv('books1.csv', books)
+    # print("Books are saved")
+    #
+    # users = remove_users(book_ratings, users)
+    # print("Users were removed.")
+    # write_to_csv('users1.csv', users)
+    # print("Users are saved")
+
+    book_ratings = remove_ratings(book_ratings, books, users)
+    print("Ratings were removed")
+    write_to_csv('ratings.csv', book_ratings)
+
+    # Pre-treatment 2
+
+    #keywords = get_keywords_from_title(books)
+
+    # Recommendation system
+
+    # Keep three random users, not everyone
+    users = get_random_users(users)
+
+    #users_preferences = get_favourites(book_ratings, users)
+
 
 
 main()
