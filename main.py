@@ -77,15 +77,16 @@ def remove_ratings(ratings, books, users):
 
 
 def get_keywords_from_title(books):
-    keywords = []
+    keywords = {}
 
     for book in books:
-        keywords.append(book[1].split())
+        keywords[book[0]] = []
+        keywords[book[0]].append(book[1].split())
 
     return keywords
 
 
-def get_favourites(book_ratings, users):
+def get_favourites(book_ratings, users, books):
     # Dictionary with users' id (key) and their favourite books' ISBN and personal rating (value of list)
     favourites = {}
 
@@ -103,30 +104,31 @@ def get_favourites(book_ratings, users):
             # If the rating is from this user
             if user_id == rating[0]:
 
-                to_be_inserted = [rating[1], rating[2]]
+                if rating[1] in [i[0] for i in books]:
 
-                # Check if the user already has 3 favourites or not
-                if len(favourites[user_id]) < 3:
+                    to_be_inserted = [rating[1], rating[2]]
 
-                    # If he doesn't, insert this one
-                    favourites[user_id].append(to_be_inserted)
-                else:
+                    # Check if the user already has 3 favourites or not
+                    if len(favourites[user_id]) < 3:
 
-                    # if he does, go through these three
-                    for favourite in favourites[user_id]:
+                        # If he doesn't, insert this one
+                        favourites[user_id].append(to_be_inserted)
+                    else:
 
-                        # And check if the current rating is higher than a previous one
-                        if rating[2] > favourite[1]:
-                            favourites[user_id].remove(favourite)
-                            favourites[user_id].append(to_be_inserted)
-                            break
+                        # if he does, go through these three
+                        for favourite in favourites[user_id]:
 
-        print(favourites[user_id])
+                            # And check if the current rating is higher than a previous one
+                            if rating[2] > favourite[1]:
+                                favourites[user_id].remove(favourite)
+                                favourites[user_id].append(to_be_inserted)
+                                break
 
     return favourites
 
 
-def get_preferences(favourites, books):
+def get_preferences(favourites, books, keywords):
+
     for user_id in favourites:
         print(favourites[user_id])
         author = []
@@ -137,6 +139,14 @@ def get_preferences(favourites, books):
             for user_favourite in favourites[user_id]:
                 if user_favourite[0] == book[0]:
                     print(user_favourite)
+                    # Add author
+                    author.append(book[2])
+
+                    # Add year of publication
+                    year_of_publication.append(book[3])
+
+                    # Add keywords from titles
+                    keywords_in_title.append(keywords[book[0]])
 
 
 def get_random_users(users):
@@ -150,21 +160,42 @@ def get_random_users(users):
 
 
 def main():
-    users = get_from_csv("users1.csv")
-    books = get_from_csv("books1.csv")
-    book_ratings = get_from_csv("BX-Book-Ratings.csv")
+
+    users_file = "users2.csv"
+    books_file = "books2.csv"
+    ratings_file = "ratings.csv"
 
     # Pre-treatment 1
 
-    # books = remove_books(book_ratings, books)
-    # print("Books were removed.")
-    # write_to_csv('books1.csv', books)
-    # print("Books are saved")
+    # I repeat it, because when ratings are removed, some users, still have less than 5 ratings
+    # So I need to remove even more users and even more books
+    # Eventually I have the right amount of users, books and ratings
+    # But just in case, I still check if the book and user of any rating exists furthermore on the project
+    # for i in range(3):
+    #     users = get_from_csv(users_file)
+    #     books = get_from_csv(books_file)
+    #     book_ratings = get_from_csv(ratings_file)
     #
-    # users = remove_users(book_ratings, users)
-    # print("Users were removed.")
-    # write_to_csv('users1.csv', users)
-    # print("Users are saved")
+    #     books = remove_books(book_ratings, books)
+    #     print("Books were removed.")
+    #     write_to_csv(books_file, books)
+    #     print("Books are saved")
+    #
+    #     users = remove_users(book_ratings, users)
+    #     print("Users were removed.")
+    #     write_to_csv(users_file, users)
+    #     print("Users are saved")
+    #
+    #     book_ratings = remove_ratings(book_ratings,books, users)
+    #     print("Ratings were removed")
+    #     write_to_csv(ratings_file, book_ratings)
+    #     print("Ratings were saved")
+
+    users = get_from_csv(users_file)
+    books = get_from_csv(books_file)
+    book_ratings = get_from_csv(ratings_file)
+
+    print("Done with pre-treatment #1")
 
     # Pre-treatment 2
 
@@ -176,10 +207,12 @@ def main():
     # Keep three random users, not everyone
     users = get_random_users(users)
 
-    users_favourites = get_favourites(book_ratings, users)
+    # Find the 3 top rated books for every user
+    users_favourites = get_favourites(book_ratings, users, books)
     print("Found favourite books for the random users")
 
-    #get_preferences(users_favourites, books)
+    # Get Data from top rated books for the random users
+    get_preferences(users_favourites, books, keywords)
 
 
 main()
