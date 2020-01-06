@@ -1,6 +1,6 @@
-import pandas as pd
-from collections import defaultdict
-from random import randint
+import pandas as pd  # For CSV
+from collections import defaultdict  # For removal of unnecessary items on the lists
+from random import randint  # For random integer
 
 
 def get_from_csv(file_name):
@@ -64,7 +64,6 @@ def remove_users(ratings, users):
 
 
 def remove_ratings(ratings, books, users):
-
     new_ratings = []
 
     # For every rating
@@ -88,7 +87,7 @@ def get_keywords_from_title(books):
 
 def get_favourites(book_ratings, users):
     # Dictionary with users' id (key) and their favourite books' ISBN and personal rating (value of list)
-    preferences = {}
+    favourites = {}
 
     # Iterate through users
     for user in users:
@@ -96,7 +95,7 @@ def get_favourites(book_ratings, users):
         user_id = user[0]
 
         # Item in dictionary for every user
-        preferences[user_id] = []
+        favourites[user_id] = []
 
         # Iterate through every rating to find ratings from this specific user
         for rating in book_ratings:
@@ -107,38 +106,45 @@ def get_favourites(book_ratings, users):
                 to_be_inserted = [rating[1], rating[2]]
 
                 # Check if the user already has 3 favourites or not
-                if len(preferences[user_id]) < 3:
+                if len(favourites[user_id]) < 3:
 
                     # If he doesn't, insert this one
-                    preferences[user_id].append(to_be_inserted)
+                    favourites[user_id].append(to_be_inserted)
                 else:
 
                     # if he does, go through these three
-                    for favourite in preferences[user_id]:
+                    for favourite in favourites[user_id]:
 
                         # And check if the current rating is higher than a previous one
                         if rating[2] > favourite[1]:
-                            preferences[user_id].remove(favourite)
-                            preferences[user_id].append(to_be_inserted)
+                            favourites[user_id].remove(favourite)
+                            favourites[user_id].append(to_be_inserted)
+                            break
 
-        print(preferences[user_id])
+        print(favourites[user_id])
 
-    return preferences
+    return favourites
 
 
-def get_preferences(favourites):
+def get_preferences(favourites, books):
+    for user_id in favourites:
+        print(favourites[user_id])
+        author = []
+        keywords_in_title = []
+        year_of_publication = []
 
-    author = []
-    keywords_in_title = []
-    year_of_publication = []
+        for book in books:
+            for user_favourite in favourites[user_id]:
+                if user_favourite[0] == book[0]:
+                    print(user_favourite)
 
 
 def get_random_users(users):
     random_users = []
 
-    for i in range(3):
-        choices = randint(len(users))
-        random_users[i] = users.get(i)
+    for i in range(5):
+        choices = randint(0, len(users))
+        random_users.append(users[choices])
 
     return random_users
 
@@ -160,21 +166,20 @@ def main():
     # write_to_csv('users1.csv', users)
     # print("Users are saved")
 
-    book_ratings = remove_ratings(book_ratings, books, users)
-    print("Ratings were removed")
-    write_to_csv('ratings.csv', book_ratings)
-
     # Pre-treatment 2
 
-    #keywords = get_keywords_from_title(books)
+    keywords = get_keywords_from_title(books)
+    print("Found keywords from every book title")
 
     # Recommendation system
 
     # Keep three random users, not everyone
     users = get_random_users(users)
 
-    #users_preferences = get_favourites(book_ratings, users)
+    users_favourites = get_favourites(book_ratings, users)
+    print("Found favourite books for the random users")
 
+    #get_preferences(users_favourites, books)
 
 
 main()
