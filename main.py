@@ -183,8 +183,6 @@ def jaccard(users, books, users_preferences, keywords):
 
     for user in users:
 
-        user_result = 0
-
         user_id = user[0]
 
         # Initialization of result of every user on every book
@@ -203,7 +201,12 @@ def jaccard(users, books, users_preferences, keywords):
         user_authors = preferences.pop()
         print("Authors: ", user_authors)
 
+        author_found = False
+
         for book in books:
+
+            # User result is equal to 0 for every book before any calculation
+            user_result = 0
 
             isbn = book[0]
 
@@ -215,7 +218,6 @@ def jaccard(users, books, users_preferences, keywords):
 
             if author in user_authors:
                 user_result += 0.4
-                break
 
             # Check keywords
 
@@ -237,9 +239,12 @@ def jaccard(users, books, users_preferences, keywords):
 
             user_result += curr_result * 0.4
 
+            if user_result > 0.8:
+                print("ISBN: ", isbn, " with ", user_result)
+
             user_results.append([isbn, user_result])
 
-        results[user_id].append(user_results)
+        results[user_id] = user_results
 
 
 def suggest_books():
@@ -282,7 +287,7 @@ def main():
     books = get_from_csv(books_file)
     book_ratings = get_from_csv(ratings_file)
 
-    print("Done with pre-treatment #1")
+    print("Data is taken from the CSV files")
 
     # Pre-treatment 2
 
@@ -300,6 +305,7 @@ def main():
 
     # Get Data from favourite books for the random users
     preferences = get_preferences(users_favourites, books, keywords)
+    print("Preferences of random users are created")
 
     jaccard(users, books, preferences, keywords)
 
