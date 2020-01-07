@@ -80,8 +80,12 @@ def get_keywords_from_title(books):
     keywords = {}
 
     for book in books:
-        keywords[book[0]] = []
-        keywords[book[0]].append(book[1].split())
+
+        isbn = book[0]
+        title = book[1]
+
+        keywords[isbn] = []
+        keywords[isbn] = title.split()
 
     return keywords
 
@@ -129,24 +133,38 @@ def get_favourites(book_ratings, users, books):
 
 def get_preferences(favourites, books, keywords):
 
+    users_preferences = {}
+
     for user_id in favourites:
-        print(favourites[user_id])
+        users_preferences[user_id] = []
         author = []
         keywords_in_title = []
         year_of_publication = []
 
         for book in books:
+
+            book_isbn = book[0]
+            book_author = book[2]
+            book_year = book[3]
+
             for user_favourite in favourites[user_id]:
-                if user_favourite[0] == book[0]:
-                    print(user_favourite)
+                if user_favourite[0] == book_isbn:
+
                     # Add author
-                    author.append(book[2])
+                    author.append(book_author)
 
                     # Add year of publication
-                    year_of_publication.append(book[3])
+                    year_of_publication.append(book_year)
 
                     # Add keywords from titles
-                    keywords_in_title.append(keywords[book[0]])
+                    # Need to move keywords from each favourite book into one list, not three separated
+                    for keyword in keywords[book_isbn]:
+                        keywords_in_title.append(keyword)
+
+        preferences = [author, keywords_in_title, year_of_publication]
+        users_preferences[user_id] = preferences
+
+    return users_preferences
 
 
 def get_random_users(users):
@@ -157,6 +175,75 @@ def get_random_users(users):
         random_users.append(users[choices])
 
     return random_users
+
+
+def jaccard(users, books, users_preferences, keywords):
+
+    results = {}
+
+    for user in users:
+
+        user_result = 0
+
+        user_id = user[0]
+
+        # Initialization of result of every user on every book
+        results[user_id] = []
+
+        # User's results for every book
+        user_results = []
+
+        preferences = users_preferences[user_id]
+
+        # Separate preferences for better understanding of the code
+        user_years = preferences.pop()
+        print("Years: ", user_years)
+        user_keywords = preferences.pop() # Make this ONE list, not 3
+        print("Keywords: ", user_keywords)
+        user_authors = preferences.pop()
+        print("Authors: ", user_authors)
+
+        for book in books:
+
+            isbn = book[0]
+
+            author = book[2]
+            year = book[3]
+            keywords_from_book = keywords[isbn]
+
+            # Check author
+
+            if author in user_authors:
+                user_result += 0.4
+                break
+
+            # Check keywords
+
+            common_keywords = 0
+            for keyword_from_book in keywords_from_book:
+                for user_keyword in user_keywords:
+                    if user_keyword in keyword_from_book:
+                        common_keywords += 1
+
+            user_result += ((common_keywords*2) / (len(keywords_from_book) + len(user_keywords))) * 0.2
+
+            # Check year of publication
+
+            for user_year in user_years:
+                tmp = 1 - (abs(int(year) - int(user_year))/2005)
+                curr_result = 0
+                if tmp > curr_result:
+                    curr_result = tmp
+
+            user_result += curr_result * 0.4
+
+            user_results.append([isbn, user_result])
+
+        results[user_id].append(user_results)
+
+
+def suggest_books():
+    print()
 
 
 def main():
@@ -211,8 +298,12 @@ def main():
     users_favourites = get_favourites(book_ratings, users, books)
     print("Found favourite books for the random users")
 
-    # Get Data from top rated books for the random users
-    get_preferences(users_favourites, books, keywords)
+    # Get Data from favourite books for the random users
+    preferences = get_preferences(users_favourites, books, keywords)
+
+    jaccard(users, books, preferences, keywords)
+
+    suggest_books()
 
 
 main()
