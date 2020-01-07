@@ -1,3 +1,5 @@
+import sys
+
 import pandas as pd  # For CSV
 from collections import defaultdict  # For removal of unnecessary items on the lists
 from random import randint  # For random integer
@@ -177,11 +179,14 @@ def get_random_users(users):
     return random_users
 
 
-def jaccard(users, books, users_preferences, keywords):
+def jaccard(users, books, users_preferences, keywords, author_value=0.4, keywords_value=0.2, year_value=0.4):
 
     results = {}
 
     for user in users:
+
+        # Counter for how many books has been suggested to the current user
+        suggested = 0
 
         user_id = user[0]
 
@@ -195,11 +200,8 @@ def jaccard(users, books, users_preferences, keywords):
 
         # Separate preferences for better understanding of the code
         user_years = preferences.pop()
-        print("Years: ", user_years)
-        user_keywords = preferences.pop() # Make this ONE list, not 3
-        print("Keywords: ", user_keywords)
+        user_keywords = preferences.pop()
         user_authors = preferences.pop()
-        print("Authors: ", user_authors)
 
         author_found = False
 
@@ -217,7 +219,7 @@ def jaccard(users, books, users_preferences, keywords):
             # Check author
 
             if author in user_authors:
-                user_result += 0.4
+                user_result += author_value
 
             # Check keywords
 
@@ -227,7 +229,7 @@ def jaccard(users, books, users_preferences, keywords):
                     if user_keyword in keyword_from_book:
                         common_keywords += 1
 
-            user_result += ((common_keywords*2) / (len(keywords_from_book) + len(user_keywords))) * 0.2
+            user_result += ((common_keywords*2) / (len(keywords_from_book) + len(user_keywords))) * keywords_value
 
             # Check year of publication
 
@@ -237,55 +239,70 @@ def jaccard(users, books, users_preferences, keywords):
                 if tmp > curr_result:
                     curr_result = tmp
 
-            user_result += curr_result * 0.4
+            user_result += curr_result * year_value
 
             if user_result > 0.8:
                 print("ISBN: ", isbn, " with ", user_result)
 
             user_results.append([isbn, user_result])
 
+
+            #if suggested < 10 or user_result >= i in []:
+            #    suggested += 1
+
         results[user_id] = user_results
 
+    return results
 
-def suggest_books():
+
+def suggest_books(users, books, results):
     print()
 
 
 def main():
 
-    users_file = "users2.csv"
-    books_file = "books2.csv"
-    ratings_file = "ratings.csv"
-
     # Pre-treatment 1
 
-    # I repeat it, because when ratings are removed, some users, still have less than 5 ratings
-    # So I need to remove even more users and even more books
-    # Eventually I have the right amount of users, books and ratings
-    # But just in case, I still check if the book and user of any rating exists furthermore on the project
-    # for i in range(3):
-    #     users = get_from_csv(users_file)
-    #     books = get_from_csv(books_file)
-    #     book_ratings = get_from_csv(ratings_file)
-    #
-    #     books = remove_books(book_ratings, books)
-    #     print("Books were removed.")
-    #     write_to_csv(books_file, books)
-    #     print("Books are saved")
-    #
-    #     users = remove_users(book_ratings, users)
-    #     print("Users were removed.")
-    #     write_to_csv(users_file, users)
-    #     print("Users are saved")
-    #
-    #     book_ratings = remove_ratings(book_ratings,books, users)
-    #     print("Ratings were removed")
-    #     write_to_csv(ratings_file, book_ratings)
-    #     print("Ratings were saved")
+    if len(sys.argv) == 1:
+        users_file = "users2.csv"
+        books_file = "books2.csv"
+        ratings_file = "ratings.csv"
 
-    users = get_from_csv(users_file)
-    books = get_from_csv(books_file)
-    book_ratings = get_from_csv(ratings_file)
+        users = get_from_csv(users_file)
+        books = get_from_csv(books_file)
+        book_ratings = get_from_csv(ratings_file)
+    elif len(sys.argv) == 2 and sys.argv[1] == "start":
+
+        # I repeat it, because when ratings are removed, some users, still have less than 5 ratings
+        # So I need to remove even more users and even more books
+        # Eventually I have the right amount of users, books and ratings
+        # But just in case, I still check if the book and user of any rating exists furthermore on the project
+        for i in range(3):
+            users_file = "BX-Users.csv"
+            books_file = "BX-Books.csv"
+            ratings_file = "BX-Book-Ratings.csv"
+
+            users = get_from_csv(users_file)
+            books = get_from_csv(books_file)
+            book_ratings = get_from_csv(ratings_file)
+
+            books = remove_books(book_ratings, books)
+            print("Books were removed.")
+            write_to_csv(books_file, books)
+            print("Books are saved")
+
+            users = remove_users(book_ratings, users)
+            print("Users were removed.")
+            write_to_csv(users_file, users)
+            print("Users are saved")
+
+            book_ratings = remove_ratings(book_ratings,books, users)
+            print("Ratings were removed")
+            write_to_csv(ratings_file, book_ratings)
+            print("Ratings were saved")
+    else:
+        print("Wrong argument(s)")
+        exit(0)
 
     print("Data is taken from the CSV files")
 
@@ -307,9 +324,10 @@ def main():
     preferences = get_preferences(users_favourites, books, keywords)
     print("Preferences of random users are created")
 
-    jaccard(users, books, preferences, keywords)
+    results = jaccard(users, books, preferences, keywords)
 
-    suggest_books()
+    suggest_books(users, books, results)
+    print("Books has been suggested")
 
 
 main()
