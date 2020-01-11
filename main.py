@@ -216,8 +216,8 @@ def get_random_users(users):
     return random_users
 
 
-def jaccard(users, books, users_preferences, keywords, author_value=0.4, keywords_value=0.2, year_value=0.4):
-
+# Default values are the Jaccard ones
+def uniformity(users, books, users_preferences, keywords, author_value=0.4, keywords_value=0.2, year_value=0.4):
     results = {}
 
     for user in users:
@@ -233,6 +233,7 @@ def jaccard(users, books, users_preferences, keywords, author_value=0.4, keyword
         preferences = users_preferences[user_id]
 
         # Separate preferences for better understanding of the code
+        print(preferences)
         user_years = preferences.pop()
         user_keywords = preferences.pop()
         user_authors = preferences.pop()
@@ -286,10 +287,64 @@ def jaccard(users, books, users_preferences, keywords, author_value=0.4, keyword
 
 
 def suggest_books(users, books, results):
+    suggested_results = {}
+    suggested_books = {}
+
+    for user in users:
+
+        user_id = user[0]
+
+        suggested_results[user_id] = []
+        suggested_books[user_id] = []
+
+        suggested_counter = 0
+
+        for book in books:
+            for result in results[user_id]:
+                # If the current result is about this book
+                if result[0] == book[0]:
+                    curr_result = result[1]
+
+                    # If the book is already read, don't mind about it
+                    if curr_result == 1.0:
+                        continue
+                    # If this user has 10 suggestions
+                    elif suggested_counter == 10:
+                        # Check if any of the suggestions has lower result value than the current
+                        for suggested_book in suggested_results[user_id]:
+                            if curr_result > suggested_book[1]:
+                                # suggested_book = result
+                                index = suggested_results[user_id].index(suggested_book)
+                                suggested_results[user_id][index] = result
+                                suggested_books[user_id][index] = book
+                                break
+                    else:
+                        suggested_results[user_id].append(result)
+                        suggested_books[user_id].append(book)
+                        suggested_counter += 1
+        # print(suggested_books[user_id])
+
+    return suggested_books
+
+
+def write_suggestions(users, suggestions, result_type):
+    for user in users:
+
+        user_id = user[0]
+
+        file_name = "user-" + str(users.index(user)) + "-" + result_type + ".txt"
+        with open(file_name, 'w') as f:
+            for suggestion in suggestions[user_id]:
+                f.write("ISBN: %s \t with title: %s\nAuthor is: %s and year is %s\n" % (
+                    suggestion[0], suggestion[1], suggestion[2], suggestion[3]))
+
+
+def overlap(users, jaccard, dice):
     print()
 
 
 def main():
+
     # Pre-treatment 1
 
     if len(sys.argv) == 1:
@@ -353,10 +408,22 @@ def main():
     preferences = get_preferences(users_favourites, books, keywords)
     print("Preferences of random users are created")
 
-    results = jaccard(users, books, preferences, keywords)
+    results_jaccard = uniformity(users, books, preferences, keywords)
+    print("Jaccard is done")
 
-    suggest_books(users, books, results)
-    print("Books has been suggested")
+    preferences = get_preferences(users_favourites, books, keywords)
+    results_dice = uniformity(users, books, preferences, keywords, 0.3, 0.5, 0.2)
+    print("Dice coefficient is done")
+
+    suggested_books_jaccard = suggest_books(users, books, results_jaccard)
+    print("Book suggestions for Jaccard are being done")
+    suggested_books_dice = suggest_books(users, books, results_dice)
+    print("Book suggestions for dice coefficient are being done")
+
+    write_suggestions(users, suggested_books_jaccard, "jaccard")
+    write_suggestions(users, suggested_books_dice, "dice")
+
+    overlap(users, suggested_books_jaccard, suggested_books_dice)
 
 
 main()
