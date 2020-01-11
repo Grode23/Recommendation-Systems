@@ -1,5 +1,4 @@
-import sys
-
+import sys  # For argv
 import pandas as pd  # For CSV
 from collections import defaultdict, OrderedDict  # For removal of unnecessary items on the lists
 from random import randint  # For random integer
@@ -7,15 +6,12 @@ from random import randint  # For random integer
 
 def get_from_csv(file_name):
     # Read the CSV into a pandas data frame (df)
-    #   With a df you can do many things
-    #   most important: visualize data with Seaborn
+    # Encoding to ISO-8859-1 because of the non-ASCII characters
+    # Some lines contain ';' as a character and for that reason, I get some errors. error_bad_lines handles those lines
     df = pd.read_csv(file_name, delimiter=';', encoding="ISO-8859-1", error_bad_lines=False, dtype='unicode')
 
-    # Or export it in many ways, e.g. a list of tuples
+    # Return a list with the values of the CSV file
     return [list(x) for x in df.values]
-
-    # or export it as a list of dicts
-    # dicts = df.to_dict().values()
 
 
 def write_to_csv(file_name, my_list):
@@ -25,6 +21,7 @@ def write_to_csv(file_name, my_list):
     df.to_csv(file_name, index=False, sep=';', encoding='ISO-8859-1')
 
 
+# Remove unnecessary books from the CSV
 def remove_books(ratings, books):
     isbn_d = defaultdict(int)
 
@@ -45,6 +42,7 @@ def remove_books(ratings, books):
     return new_books
 
 
+# Remove unnecessary users from the CSV
 def remove_users(ratings, users):
     users_d = defaultdict(int)
 
@@ -65,6 +63,7 @@ def remove_users(ratings, users):
     return new_users
 
 
+# remove unnecessary ratings from CSV
 def remove_ratings(ratings, books, users):
     new_ratings = []
 
@@ -79,6 +78,8 @@ def remove_ratings(ratings, books, users):
 
 
 def get_keywords_from_title(books):
+
+    # A dictionary with ISBN as key and a list of keywords as value
     keywords = {}
 
     for book in books:
@@ -100,12 +101,15 @@ def get_keywords_from_title(books):
                 # Remove words with numbers since they probably represent a false statement about liking of a user
                 valid = True
                 for char in keyword:
+                    # If any character of a word is a digit, don't add it to the keywords
                     if char.isdigit():
                         valid = False
                         break
                 if valid:
                     temp.append(keyword.lower())  # When append, transform to lowercase
 
+        # I cannot manipulate keywords[isbn] because I iterate through it, so I add a temp with the correct values
+        # When I am done with the loop
         keywords[isbn] = temp
 
         # Remove non character letter such as (, ), /, \ etc
@@ -114,27 +118,53 @@ def get_keywords_from_title(books):
 
         for keyword in keywords[isbn]:
             temp_keyword = keyword
+            second_temp_keyword = None
             for char in keyword:
 
                 if char.isalpha() is False:
+
+                    # Index of the next char
                     next_index = keyword.index(char) + 1
-                    if len(keyword) != next_index and keyword[next_index].isalpha is False:
-                        temp_keyword = temp_keyword.replace(char, " ")
+                    # print(char)
+                    # if len(keyword) > next_index:
+                    #     print(keyword[next_index])
+                    # print(keyword)
+
+                    # If it's not the last or the first index and the next character is a letter
+                    if len(keyword) > next_index != 1 and keyword[next_index].isalpha() is True:
+
+                        both_temp_keywords = temp_keyword.replace(char, " ").split()
+
+                        # If the first word isn't too short, add it to temp_keyword
+                        if len(both_temp_keywords[0]) > 2:
+                            temp_keyword = both_temp_keywords[0]
+
+                        # if a second word really exists
+                        if len(both_temp_keywords) == 2:
+                            # And it's not too short, add it to second_temp_keyword
+                            if len(both_temp_keywords[1]) > 2:
+                                second_temp_keyword = both_temp_keywords[1]
+
                     else:
                         temp_keyword = temp_keyword.replace(char, "")
 
             temp_keywords.append(temp_keyword)
 
+            # Add second_temp_keyword is it exists
+            if second_temp_keyword is not None:
+                temp_keywords.append(second_temp_keyword)
+
+        # Add every keyword of the current book
         keywords[isbn] = temp_keywords
 
     return keywords
 
 
+# Get the 3 top rated books for each user
 def get_favourites(book_ratings, users, books):
     # Dictionary with users' id (key) and their favourite books' ISBN and personal rating (value of list)
     favourites = {}
 
-    # Iterate through users
     for user in users:
 
         user_id = user[0]
@@ -148,6 +178,7 @@ def get_favourites(book_ratings, users, books):
             # If the rating is from this user
             if user_id == rating[0]:
 
+                # If the book exists
                 if rating[1] in [i[0] for i in books]:
 
                     to_be_inserted = [rating[1], rating[2]]
@@ -171,6 +202,8 @@ def get_favourites(book_ratings, users, books):
     return favourites
 
 
+# Get preferences for each user
+# Favourite authors, years of publication and keywords from titles
 def get_preferences(favourites, books, keywords):
     users_preferences = {}
 
@@ -206,10 +239,10 @@ def get_preferences(favourites, books, keywords):
     return users_preferences
 
 
-def get_random_users(users):
+def get_random_users(users, amount=5):
     random_users = []
 
-    for i in range(5):
+    for i in range(amount):
         choices = randint(0, len(users))
         random_users.append(users[choices])
 
@@ -327,12 +360,18 @@ def suggest_books(users, books, results):
     return suggested_books
 
 
+# Write suggestions to text files
+# 2 files for each user
+# One file for Jaccard and one file for Dice coefficient
 def write_suggestions(users, suggestions, result_type):
     for user in users:
 
         user_id = user[0]
 
+        # Name of the file is the index of user and the type of the uniformity
+        # Example: user-0-jaccard.txt
         file_name = "user-" + str(users.index(user)) + "-" + result_type + ".txt"
+
         with open(file_name, 'w') as f:
             for suggestion in suggestions[user_id]:
                 f.write("ISBN: %s \t with title: %s\nAuthor is: %s and year is %s\n" % (
@@ -344,7 +383,6 @@ def overlap(users, jaccard, dice):
 
 
 def main():
-
     # Pre-treatment 1
 
     if len(sys.argv) == 1:
