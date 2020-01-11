@@ -1,7 +1,7 @@
 import sys
 
 import pandas as pd  # For CSV
-from collections import defaultdict  # For removal of unnecessary items on the lists
+from collections import defaultdict, OrderedDict  # For removal of unnecessary items on the lists
 from random import randint  # For random integer
 
 
@@ -82,12 +82,50 @@ def get_keywords_from_title(books):
     keywords = {}
 
     for book in books:
-
         isbn = book[0]
         title = book[1]
 
         keywords[isbn] = []
         keywords[isbn] = title.split()
+
+        # Remove duplicates
+        keywords[isbn] = list(OrderedDict.fromkeys(keywords[isbn]))
+
+        temp = []
+        for keyword in keywords[isbn]:
+
+            # Remove too short words
+            if len(keyword) > 2:
+
+                # Remove words with numbers since they probably represent a false statement about liking of a user
+                valid = True
+                for char in keyword:
+                    if char.isdigit():
+                        valid = False
+                        break
+                if valid:
+                    temp.append(keyword.lower())  # When append, transform to lowercase
+
+        keywords[isbn] = temp
+
+        # Remove non character letter such as (, ), /, \ etc
+
+        temp_keywords = []
+
+        for keyword in keywords[isbn]:
+            temp_keyword = keyword
+            for char in keyword:
+
+                if char.isalpha() is False:
+                    next_index = keyword.index(char) + 1
+                    if len(keyword) != next_index and keyword[next_index].isalpha is False:
+                        temp_keyword = temp_keyword.replace(char, " ")
+                    else:
+                        temp_keyword = temp_keyword.replace(char, "")
+
+            temp_keywords.append(temp_keyword)
+
+        keywords[isbn] = temp_keywords
 
     return keywords
 
@@ -134,7 +172,6 @@ def get_favourites(book_ratings, users, books):
 
 
 def get_preferences(favourites, books, keywords):
-
     users_preferences = {}
 
     for user_id in favourites:
@@ -185,9 +222,6 @@ def jaccard(users, books, users_preferences, keywords, author_value=0.4, keyword
 
     for user in users:
 
-        # Counter for how many books has been suggested to the current user
-        suggested = 0
-
         user_id = user[0]
 
         # Initialization of result of every user on every book
@@ -202,8 +236,6 @@ def jaccard(users, books, users_preferences, keywords, author_value=0.4, keyword
         user_years = preferences.pop()
         user_keywords = preferences.pop()
         user_authors = preferences.pop()
-
-        author_found = False
 
         for book in books:
 
@@ -224,31 +256,29 @@ def jaccard(users, books, users_preferences, keywords, author_value=0.4, keyword
             # Check keywords
 
             common_keywords = 0
-            for keyword_from_book in keywords_from_book:
-                for user_keyword in user_keywords:
-                    if user_keyword in keyword_from_book:
+
+            # If I removed every keyword (for example "2001" because I remove numbers)
+            if len(keywords_from_book) > 0:
+                for keyword_from_book in keywords_from_book:
+                    if keyword_from_book in user_keywords:
                         common_keywords += 1
 
-            user_result += ((common_keywords*2) / (len(keywords_from_book) + len(user_keywords))) * keywords_value
+                user_result += (common_keywords / len(keywords_from_book)) * keywords_value
 
             # Check year of publication
 
             for user_year in user_years:
-                tmp = 1 - (abs(int(year) - int(user_year))/2005)
+                tmp = 1 - (abs(int(year) - int(user_year)) / 2005)
                 curr_result = 0
                 if tmp > curr_result:
                     curr_result = tmp
 
             user_result += curr_result * year_value
 
-            if user_result > 0.8:
-                print("ISBN: ", isbn, " with ", user_result)
+            # if user_result > 0.8:
+            #     print("ISBN: ", isbn, " with ", user_result)
 
             user_results.append([isbn, user_result])
-
-
-            #if suggested < 10 or user_result >= i in []:
-            #    suggested += 1
 
         results[user_id] = user_results
 
@@ -260,7 +290,6 @@ def suggest_books(users, books, results):
 
 
 def main():
-
     # Pre-treatment 1
 
     if len(sys.argv) == 1:
@@ -296,7 +325,7 @@ def main():
             write_to_csv(users_file, users)
             print("Users are saved")
 
-            book_ratings = remove_ratings(book_ratings,books, users)
+            book_ratings = remove_ratings(book_ratings, books, users)
             print("Ratings were removed")
             write_to_csv(ratings_file, book_ratings)
             print("Ratings were saved")
