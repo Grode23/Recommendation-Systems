@@ -1,0 +1,20 @@
+ISBN: 0743204697 	 with title: The Woman Next Door
+Author is: Barbara Delinsky and year is 2001
+ISBN: 0385334710 	 with title: Looking Back
+Author is: Belva Plain and year is 2001
+ISBN: 0440177049 	 with title: Season of Passion
+Author is: Danielle Steel and year is 1980
+ISBN: 0385335520 	 with title: The Cottage
+Author is: Danielle Steel and year is 2002
+ISBN: 0385335407 	 with title: The Kiss
+Author is: Danielle Steel and year is 2001
+ISBN: 0671036505 	 with title: The Vineyard
+Author is: Barbara Delinsky and year is 2001
+ISBN: 0440236819 	 with title: The Cottage
+Author is: Danielle Steel and year is 2003
+ISBN: 0440236851 	 with title: The Wedding
+Author is: Danielle Steel and year is 2001
+ISBN: 038531437X 	 with title: The Wedding
+Author is: Danielle Steel and year is 2000
+ISBN: 0385316348 	 with title: The Ranch
+Author is: Danielle Steel and year is 1997

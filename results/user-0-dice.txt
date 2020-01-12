@@ -1,0 +1,20 @@
+ISBN: 0312950586 	 with title: Every Living Thing
+Author is: James Herriot and year is 1996
+ISBN: 031208188X 	 with title: Every Living Thing
+Author is: James Herriot and year is 1992
+ISBN: 0310209307 	 with title: The Case for Christ:  A Journalist's Personal Investigation of the Evidence for Jesus
+Author is: Lee Strobel and year is 1998
+ISBN: 0061094196 	 with title: Faith
+Author is: Len Deighton and year is 1995
+ISBN: 0312498349 	 with title: The Lord God Made Them All
+Author is: James Herriot and year is 1981
+ISBN: 0802138004 	 with title: The Toughest Indian in the World
+Author is: Sherman Alexie and year is 2001
+ISBN: 0312965788 	 with title: All Creatures Great and Small
+Author is: James Herriot and year is 1998
+ISBN: 0553204572 	 with title: All Things Wise and Wonderful
+Author is: James Herriot and year is 1981
+ISBN: 0330246631 	 with title: Vet in harness
+Author is: James Herriot and year is 1976
+ISBN: 0553800914 	 with title: The Search
+Author is: Iris Johansen and year is 2000

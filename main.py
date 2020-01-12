@@ -1,4 +1,6 @@
 import sys  # For argv
+from pathlib import Path
+
 import pandas as pd  # For CSV
 from collections import defaultdict, OrderedDict  # For removal of unnecessary items on the lists
 from random import randint  # For random integer
@@ -371,6 +373,8 @@ def write_suggestions(users, suggestions, result_type):
         # Name of the file is the index of user and the type of the uniformity
         # Example: user-0-jaccard.txt
         file_name = "user-" + str(users.index(user)) + "-" + result_type + ".txt"
+        data_folder = Path("results/")
+        file_name = data_folder / file_name
 
         with open(file_name, 'w') as f:
             for suggestion in suggestions[user_id]:
@@ -461,7 +465,7 @@ def main():
     write_suggestions(users, suggested_books_jaccard, "jaccard")
     write_suggestions(users, suggested_books_dice, "dice")
 
-    overlap(users, suggested_books_jaccard, suggested_books_dice)
+    #overlap(users, suggested_books_jaccard, suggested_books_dice)
 
 
 main()

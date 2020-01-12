@@ -1,0 +1,20 @@
+ISBN: 0440220793 	 with title: The 13th Juror
+Author is: John T. Lescroart and year is 1995
+ISBN: 0140180907 	 with title: Heart of Darkness (Penguin Classics)
+Author is: Joseph Conrad and year is 1994
+ISBN: 0451526570 	 with title: Heart of Darkness and the Secret Sharer
+Author is: Joseph Conrad and year is 1997
+ISBN: 0140431683 	 with title: Heart of Darkness (English Library)
+Author is: Joseph Conrad and year is 1984
+ISBN: 0525947752 	 with title: The Second Chair: A Novel
+Author is: John T. Lescroart and year is 2004
+ISBN: 0446602698 	 with title: The Juror
+Author is: George Dawes Green and year is 1995
+ISBN: 1551665840 	 with title: Return
+Author is: Dinah Mccall and year is 2000
+ISBN: 0553574132 	 with title: Star Wars: Shadows of the Empire
+Author is: Steve Perry and year is 1998
+ISBN: 0140445560 	 with title: The Odyssey (Penguin Classics)
+Author is: Homer and year is 1992
+ISBN: 0553292455 	 with title: Servant of the Empire
+Author is: RAYMOND FEIST and year is 1997
