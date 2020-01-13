@@ -1,5 +1,5 @@
 import sys  # For argv
-from pathlib import Path
+from pathlib import Path  # Path to save results to
 
 import pandas as pd  # For CSV
 from collections import defaultdict, OrderedDict  # For removal of unnecessary items on the lists
@@ -253,6 +253,7 @@ def get_random_users(users, amount=5):
 
 # Default values are the Jaccard ones
 def uniformity(users, books, users_preferences, keywords, author_value=0.4, keywords_value=0.2, year_value=0.4):
+
     results = {}
 
     for user in users:
@@ -268,10 +269,9 @@ def uniformity(users, books, users_preferences, keywords, author_value=0.4, keyw
         preferences = users_preferences[user_id]
 
         # Separate preferences for better understanding of the code
-        print(preferences)
-        user_years = preferences.pop()
-        user_keywords = preferences.pop()
-        user_authors = preferences.pop()
+        user_years = preferences[2]
+        user_keywords = preferences[1]
+        user_authors = preferences[0]
 
         for book in books:
 
@@ -357,9 +357,8 @@ def suggest_books(users, books, results):
                         suggested_results[user_id].append(result)
                         suggested_books[user_id].append(book)
                         suggested_counter += 1
-        # print(suggested_books[user_id])
 
-    return suggested_books
+    return suggested_books, suggested_results
 
 
 # Write suggestions to text files
@@ -382,11 +381,35 @@ def write_suggestions(users, suggestions, result_type):
                     suggestion[0], suggestion[1], suggestion[2], suggestion[3]))
 
 
-def overlap(users, jaccard, dice):
-    print()
+def overlap(users, jaccard_results, dice_results):
+
+    fractions = {}
+
+    for user in users:
+
+        user_id = user[0]
+
+        for i in range(10):
+            books_from_jaccard = []
+            for j in range(i+1):
+                books_from_jaccard.append(jaccard_results[user_id][j][0])
+
+            fraction = 0
+            for j in range(i+1):
+                if dice_results[user_id][j][0] in books_from_jaccard:
+                    fraction += 1
+
+            fraction = fraction / (i+1)
+
+        fractions[user_id] = fraction
+
+        print(fractions[user_id])
+
+    return fractions
 
 
 def main():
+
     # Pre-treatment 1
 
     if len(sys.argv) == 1:
@@ -453,19 +476,19 @@ def main():
     results_jaccard = uniformity(users, books, preferences, keywords)
     print("Jaccard is done")
 
-    preferences = get_preferences(users_favourites, books, keywords)
     results_dice = uniformity(users, books, preferences, keywords, 0.3, 0.5, 0.2)
     print("Dice coefficient is done")
 
-    suggested_books_jaccard = suggest_books(users, books, results_jaccard)
+    suggested_books_jaccard, suggested_results_jaccard = suggest_books(users, books, results_jaccard)
     print("Book suggestions for Jaccard are being done")
-    suggested_books_dice = suggest_books(users, books, results_dice)
+    suggested_books_dice, suggested_results_dice = suggest_books(users, books, results_dice)
     print("Book suggestions for dice coefficient are being done")
 
     write_suggestions(users, suggested_books_jaccard, "jaccard")
     write_suggestions(users, suggested_books_dice, "dice")
 
-    #overlap(users, suggested_books_jaccard, suggested_books_dice)
+    fractions = overlap(users, suggested_results_jaccard, suggested_results_dice)
+    print("Overlapping is done")
 
 
 main()
