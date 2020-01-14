@@ -1,4 +1,5 @@
 import sys  # For argv
+from operator import itemgetter
 from pathlib import Path  # Path to save results to
 
 import pandas as pd  # For CSV
@@ -80,7 +81,6 @@ def remove_ratings(ratings, books, users):
 
 
 def get_keywords_from_title(books):
-
     # A dictionary with ISBN as key and a list of keywords as value
     keywords = {}
 
@@ -253,7 +253,6 @@ def get_random_users(users, amount=5):
 
 # Default values are the Jaccard ones
 def uniformity(users, books, users_preferences, keywords, author_value=0.4, keywords_value=0.2, year_value=0.4):
-
     results = {}
 
     for user in users:
@@ -382,7 +381,6 @@ def write_suggestions(users, suggestions, result_type):
 
 
 def overlap(users, jaccard_results, dice_results):
-
     fractions = {}
 
     for user in users:
@@ -391,15 +389,15 @@ def overlap(users, jaccard_results, dice_results):
 
         for i in range(10):
             books_from_jaccard = []
-            for j in range(i+1):
+            for j in range(i + 1):
                 books_from_jaccard.append(jaccard_results[user_id][j][0])
 
             fraction = 0
-            for j in range(i+1):
+            for j in range(i + 1):
                 if dice_results[user_id][j][0] in books_from_jaccard:
                     fraction += 1
 
-            fraction = fraction / (i+1)
+            fraction = fraction / (i + 1)
 
         fractions[user_id] = fraction
 
@@ -408,8 +406,74 @@ def overlap(users, jaccard_results, dice_results):
     return fractions
 
 
-def main():
+def sort_golden(users, goldens):
 
+    sorted_golden = {}
+
+    for user in users:
+
+        user_id = user[0]
+        sorted_golden[user_id] = []
+
+        for times in range(2, 0, -1):
+            temp_sorted = []
+            for golden in goldens[user_id]:
+
+                if golden[1] == times:
+                    temp_sorted.append(golden)
+
+            temp_sorted = sorted(temp_sorted, key=itemgetter(2), reverse=True)
+
+            for temp in temp_sorted:
+                sorted_golden[user_id].append(temp)
+
+        print(sorted_golden[user_id])
+
+    return sorted_golden
+
+
+def get_golden(users, jaccard_results, dice_results):
+    # [isbn, times, average]
+    goldens = {}
+
+    for user in users:
+
+        user_id = user[0]
+        goldens[user_id] = []
+        books = {}
+
+        for jaccard_result in jaccard_results[user_id]:
+
+            curr_isbn = jaccard_result[0]
+            times = 1
+
+            books[curr_isbn] = []
+
+            if curr_isbn in [dice_result[0] for dice_result in dice_results[user_id]]:
+                times += 1
+
+            for dice_result in dice_results[user_id]:
+
+                dice_to_be_removed = None
+                if dice_result[0] == curr_isbn:
+                    curr_result = dice_result[1]
+                    break
+
+                if times == 1:
+                    dice_to_be_removed = dice_result
+                    goldens[user_id].append([dice_result[0], times, dice_result[1]])
+                    break
+            if dice_to_be_removed is not None:
+                dice_results[user_id].remove(dice_to_be_removed)
+
+            average_result = (curr_result + jaccard_result[1]) / 2
+
+            goldens[user_id].append([curr_isbn, times, average_result])
+
+    return sort_golden(users, goldens)
+
+
+def main():
     # Pre-treatment 1
 
     if len(sys.argv) == 1:
@@ -461,6 +525,7 @@ def main():
     print("Found keywords from every book title")
 
     # Recommendation system
+    # Experiment 1
 
     # Keep three random users, not everyone
     users = get_random_users(users)
@@ -487,8 +552,16 @@ def main():
     write_suggestions(users, suggested_books_jaccard, "jaccard")
     write_suggestions(users, suggested_books_dice, "dice")
 
+    # Experiment 2
+
     fractions = overlap(users, suggested_results_jaccard, suggested_results_dice)
     print("Overlapping is done")
+
+    # Experiment 3
+    golden_standard = get_golden(users, suggested_results_jaccard, suggested_results_dice)
+
+    overlap(users, suggested_results_jaccard, golden_standard)
+    overlap(users, suggested_results_dice, golden_standard)
 
 
 main()
