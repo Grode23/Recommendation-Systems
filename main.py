@@ -251,9 +251,17 @@ def get_random_users(users, amount=5):
     return random_users
 
 
-# Default values are the Jaccard ones
-def uniformity(users, books, users_preferences, keywords, author_value=0.4, keywords_value=0.2, year_value=0.4):
+def uniformity(users, books, users_preferences, keywords, type_of_uniformity):
     results = {}
+
+    if type_of_uniformity is "jaccard":
+        author_value = 0.4
+        keywords_value = 0.2
+        year_value = 0.4
+    else:
+        author_value = 0.3
+        keywords_value = 0.5
+        year_value = 0.2
 
     for user in users:
 
@@ -290,15 +298,10 @@ def uniformity(users, books, users_preferences, keywords, author_value=0.4, keyw
 
             # Check keywords
 
-            common_keywords = 0
-
-            # If I removed every keyword (for example "2001" because I remove numbers)
-            if len(keywords_from_book) > 0:
-                for keyword_from_book in keywords_from_book:
-                    if keyword_from_book in user_keywords:
-                        common_keywords += 1
-
-                user_result += (common_keywords / len(keywords_from_book)) * keywords_value
+            if type_of_uniformity is "jaccard":
+                user_result = jaccard(user_result, user_keywords, keywords_from_book, keywords_value)
+            else:
+                user_result = dice(user_result, user_keywords, keywords_from_book, keywords_value)
 
             # Check year of publication
 
@@ -318,6 +321,46 @@ def uniformity(users, books, users_preferences, keywords, author_value=0.4, keyw
         results[user_id] = user_results
 
     return results
+
+
+def jaccard(result, user_keywords, keywords_from_book, keywords_value):
+
+    common_keywords = 0
+
+    keywords_from_both = keywords_from_book.copy()
+
+    for keyword in user_keywords:
+        if keyword not in keywords_from_both:
+            keywords_from_both.append(keyword)
+
+    length_both_sets = len(keywords_from_both)
+
+    # If I removed every keyword (for example "2001" because I remove numbers)
+    if len(keywords_from_book) > 0:
+        for keyword_from_book in keywords_from_book:
+            if keyword_from_book in user_keywords:
+                common_keywords += 1
+
+        result += (common_keywords / length_both_sets) * keywords_value
+
+    return result
+
+
+def dice(result, user_keywords, keywords_from_book, keywords_value):
+
+    common_keywords = 0
+
+    # If I removed every keyword (for example "2001" because I remove numbers)
+    if len(keywords_from_book) > 0:
+        for keyword_from_book in keywords_from_book:
+            if keyword_from_book in user_keywords:
+                common_keywords += 1
+
+        total_length = len(keywords_from_book) + len(user_keywords)
+
+        result += (2 * common_keywords / total_length) * keywords_value
+
+    return result
 
 
 def suggest_books(users, books, results):
@@ -385,6 +428,8 @@ def overlap(users, jaccard_results, dice_results):
 
     for user in users:
 
+        #print(jaccard_results[user[0]])
+
         user_id = user[0]
 
         for i in range(10):
@@ -427,7 +472,7 @@ def sort_golden(users, goldens):
             for temp in temp_sorted:
                 sorted_golden[user_id].append(temp)
 
-        print(sorted_golden[user_id])
+        #print(sorted_golden[user_id])
 
     return sorted_golden
 
@@ -469,7 +514,6 @@ def get_golden(users, jaccard_results, dice_results):
             average_result = (curr_result + jaccard_result[1]) / 2
 
             goldens[user_id].append([curr_isbn, times, average_result])
-
     return sort_golden(users, goldens)
 
 
@@ -538,10 +582,10 @@ def main():
     preferences = get_preferences(users_favourites, books, keywords)
     print("Preferences of random users are created")
 
-    results_jaccard = uniformity(users, books, preferences, keywords)
+    results_jaccard = uniformity(users, books, preferences, keywords, "jaccard")
     print("Jaccard is done")
 
-    results_dice = uniformity(users, books, preferences, keywords, 0.3, 0.5, 0.2)
+    results_dice = uniformity(users, books, preferences, keywords, "dice")
     print("Dice coefficient is done")
 
     suggested_books_jaccard, suggested_results_jaccard = suggest_books(users, books, results_jaccard)
@@ -558,10 +602,20 @@ def main():
     print("Overlapping is done")
 
     # Experiment 3
-    golden_standard = get_golden(users, suggested_results_jaccard, suggested_results_dice)
+    # temp_dice = suggested_results_dice.copy()
+    temp_dice = {}
+    for user in users:
+        temp_dice[user[0]] = suggested_results_dice[user[0]].copy()
+
+    golden_standard = get_golden(users, suggested_results_jaccard, temp_dice)
 
     overlap(users, suggested_results_jaccard, golden_standard)
+    print("Overlap with golden and jaccard")
     overlap(users, suggested_results_dice, golden_standard)
+    print("Overlap with golden and dice")
 
 
 main()
+
+
+#dialexi 9 31 selida
