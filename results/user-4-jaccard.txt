@@ -1,20 +1,20 @@
-ISBN: 0743204697 	 with title: The Woman Next Door
-Author is: Barbara Delinsky and year is 2001
-ISBN: 0385334710 	 with title: Looking Back
-Author is: Belva Plain and year is 2001
-ISBN: 0440177049 	 with title: Season of Passion
-Author is: Danielle Steel and year is 1980
-ISBN: 0385335520 	 with title: The Cottage
-Author is: Danielle Steel and year is 2002
-ISBN: 0385335407 	 with title: The Kiss
-Author is: Danielle Steel and year is 2001
-ISBN: 0671036505 	 with title: The Vineyard
-Author is: Barbara Delinsky and year is 2001
-ISBN: 0440236819 	 with title: The Cottage
-Author is: Danielle Steel and year is 2003
-ISBN: 0440236851 	 with title: The Wedding
-Author is: Danielle Steel and year is 2001
-ISBN: 038531437X 	 with title: The Wedding
-Author is: Danielle Steel and year is 2000
-ISBN: 0385316348 	 with title: The Ranch
-Author is: Danielle Steel and year is 1997
+ISBN: 0449912108 	 with title: The Witches of Eastwick
+Author is: John Updike and year is 1996
+ISBN: 0449206475 	 with title: The Witches of Eastwick
+Author is: John Updike and year is 1995
+ISBN: 1573229725 	 with title: Fingersmith
+Author is: Sarah Waters and year is 2002
+ISBN: 1573222038 	 with title: Fingersmith
+Author is: Sarah Waters and year is 2002
+ISBN: 0449911217 	 with title: In the Beauty of the Lilies
+Author is: John Updike and year is 1997
+ISBN: 0767906551 	 with title: My Legendary Girlfriend
+Author is: Mike Gayle and year is 2003
+ISBN: 1573221562 	 with title: Affinity
+Author is: Sarah Waters and year is 2000
+ISBN: 0449245489 	 with title: Rabbit Is Rich
+Author is: John Updike and year is 1991
+ISBN: 0330491199 	 with title: The Hitch Hiker's Guide to the Galaxy (The Hitch Hiker's Guide to the Galaxy)
+Author is: Douglas Adams and year is 2002
+ISBN: 0618260250 	 with title: The Lord of the Rings
+Author is: J. R. R. Tolkien and year is 2002

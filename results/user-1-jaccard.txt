@@ -1,20 +1,20 @@
-ISBN: 0446531421 	 with title: Still Life With Crows
-Author is: Lincoln Child and year is 2003
-ISBN: 0449002411 	 with title: The Presence
-Author is: John Saul and year is 1998
-ISBN: 044990864X 	 with title: Black Lightning
-Author is: John Saul and year is 1995
-ISBN: 0449227812 	 with title: An Eye for an Eye: The Doll (Blackstone Chronicles, No 1)
-Author is: John Saul and year is 1997
-ISBN: 044922788X 	 with title: In the Shadow of Evil: The Handkerchief (The Blackstone Chronicles , No 4)
-Author is: John Saul and year is 1997
-ISBN: 0440170842 	 with title: Punish the Sinners
-Author is: John Saul and year is 1990
-ISBN: 055380250X 	 with title: The Taking (Koontz, Dean)
-Author is: Dean Koontz and year is 2004
-ISBN: 1568654073 	 with title: Blackstone Chronicles
-Author is: John Saul and year is 1997
-ISBN: 0553258648 	 with title: Hellfire
-Author is: John Saul and year is 1986
-ISBN: 0446612766 	 with title: Still Life with Crows
-Author is: Douglas Preston and year is 2004
+ISBN: 0385722435 	 with title: Ella Minnow Pea: A Novel in Letters
+Author is: Mark Dunn and year is 2002
+ISBN: 0802130208 	 with title: A Confederacy of Dunces (Evergreen Book)
+Author is: John Kennedy Toole and year is 1987
+ISBN: 052594527X 	 with title: Girl With a Pearl Earring
+Author is: Tracy Chevalier and year is 1999
+ISBN: 0452284937 	 with title: Girl With a Pearl Earring
+Author is: Tracy Chevalier and year is 2003
+ISBN: 2070417948 	 with title: La Jeune Fille a la Perle / Girl with a Pearl Earring
+Author is: Tracy Chevalier and year is 2002
+ISBN: 0394179692 	 with title: A confederacy of dunces
+Author is: John Kennedy Toole and year is 1982
+ISBN: 0394178009 	 with title: A confederacy of dunces
+Author is: John Kennedy Toole and year is 1981
+ISBN: 0671897071 	 with title: Girl : A Novel
+Author is: Blake Nelson and year is 1994
+ISBN: 0345464982 	 with title: Bad Girl : A Novel
+Author is: MICHELE JAFFE and year is 2003
+ISBN: 0312421818 	 with title: The Book of Illusions: A Novel
+Author is: Paul Auster and year is 2003

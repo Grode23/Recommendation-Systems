@@ -1,3 +1,4 @@
+import os
 import sys  # For argv
 from operator import itemgetter
 from pathlib import Path  # Path to save results to
@@ -407,6 +408,10 @@ def suggest_books(users, books, results):
 # 2 files for each user
 # One file for Jaccard and one file for Dice coefficient
 def write_suggestions(users, suggestions, result_type):
+
+    if not os.path.exists("results/"):
+        os.makedirs("results/")
+
     for user in users:
 
         user_id = user[0]
@@ -427,8 +432,6 @@ def overlap(users, jaccard_results, dice_results):
     fractions = {}
 
     for user in users:
-
-        #print(jaccard_results[user[0]])
 
         user_id = user[0]
 
@@ -471,8 +474,6 @@ def sort_golden(users, goldens):
 
             for temp in temp_sorted:
                 sorted_golden[user_id].append(temp)
-
-        #print(sorted_golden[user_id])
 
     return sorted_golden
 
@@ -589,9 +590,9 @@ def main():
     print("Dice coefficient is done")
 
     suggested_books_jaccard, suggested_results_jaccard = suggest_books(users, books, results_jaccard)
-    print("Book suggestions for Jaccard are being done")
+    print("Book suggestions for Jaccard has being done")
     suggested_books_dice, suggested_results_dice = suggest_books(users, books, results_dice)
-    print("Book suggestions for dice coefficient are being done")
+    print("Book suggestions for dice coefficient has being done")
 
     write_suggestions(users, suggested_books_jaccard, "jaccard")
     write_suggestions(users, suggested_books_dice, "dice")
@@ -616,6 +617,3 @@ def main():
 
 
 main()
-
-
-#dialexi 9 31 selida
