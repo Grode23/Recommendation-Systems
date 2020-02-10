@@ -1,4 +1,4 @@
-import os
+import os  # For directory creation
 import sys  # For argv
 from operator import itemgetter
 from pathlib import Path  # Path to save results to
@@ -27,6 +27,8 @@ def write_to_csv(file_name, my_list):
 
 # Remove unnecessary books from the CSV
 def remove_books(ratings, books):
+
+    # Key is ISBN and value the amount of times it exists
     isbn_d = defaultdict(int)
 
     for isbn in [i[1] for i in ratings]:
@@ -37,6 +39,7 @@ def remove_books(ratings, books):
     new_books = []
 
     for isbn in isbns:
+        # If it has at least 10 ratings, add it
         if isbn["count"] >= 10:
             for book in books:
                 if isbn["isbn"] == book[0]:
@@ -48,6 +51,8 @@ def remove_books(ratings, books):
 
 # Remove unnecessary users from the CSV
 def remove_users(ratings, users):
+
+    # Key is id and value the amount of times they exist
     users_d = defaultdict(int)
 
     for user in [i[0] for i in ratings]:
@@ -58,6 +63,7 @@ def remove_users(ratings, users):
     new_users = []
 
     for user_pass in users_pass:
+        # If they have at least 5 ratings, add them
         if user_pass["count"] >= 5:
             for user in users:
                 if user_pass["id"] == user[0]:
@@ -67,7 +73,7 @@ def remove_users(ratings, users):
     return new_users
 
 
-# remove unnecessary ratings from CSV
+# Remove unnecessary ratings from CSV
 def remove_ratings(ratings, books, users):
     new_ratings = []
 
@@ -89,7 +95,7 @@ def get_keywords_from_title(books):
         isbn = book[0]
         title = book[1]
 
-        keywords[isbn] = []
+        # Split title into words
         keywords[isbn] = title.split()
 
         # Remove duplicates
@@ -99,6 +105,8 @@ def get_keywords_from_title(books):
         for keyword in keywords[isbn]:
 
             # Remove too short words
+            # Not the best way of doing the stopwords
+            # But it's definitely the quickest/easiest
             if len(keyword) > 2:
 
                 # Remove words with numbers since they probably represent a false statement about liking of a user
@@ -112,13 +120,12 @@ def get_keywords_from_title(books):
                     temp.append(keyword.lower())  # When append, transform to lowercase
 
         # I cannot manipulate keywords[isbn] because I iterate through it, so I add a temp with the correct values
-        # When I am done with the loop
+        # And then I add it to the keywords list
         keywords[isbn] = temp
-
-        # Remove non character letter such as (, ), /, \ etc
 
         temp_keywords = []
 
+        # Remove non character letter such as (, ), /, \ etc
         for keyword in keywords[isbn]:
             temp_keyword = keyword
             second_temp_keyword = None
@@ -128,14 +135,11 @@ def get_keywords_from_title(books):
 
                     # Index of the next char
                     next_index = keyword.index(char) + 1
-                    # print(char)
-                    # if len(keyword) > next_index:
-                    #     print(keyword[next_index])
-                    # print(keyword)
 
                     # If it's not the last or the first index and the next character is a letter
                     if len(keyword) > next_index != 1 and keyword[next_index].isalpha() is True:
 
+                        # Replace character with space and keep these words seperate
                         both_temp_keywords = temp_keyword.replace(char, " ").split()
 
                         # If the first word isn't too short, add it to temp_keyword
@@ -166,7 +170,6 @@ def get_keywords_from_title(books):
 # Get the 3 top rated books for each user
 def get_favourites(book_ratings, user_id, books):
 
-    # Item in dictionary for every user
     favourites = []
 
     # Iterate through every rating to find ratings from this specific user
@@ -199,13 +202,12 @@ def get_favourites(book_ratings, user_id, books):
     return favourites
 
 
-# Get preferences for each user
 # Favourite authors, years of publication and keywords from titles
 def get_preferences(favourites, books, keywords):
 
-    author = []
-    keywords_in_title = []
-    year_of_publication = []
+    authors = []
+    keywords_in_titles = []
+    year_of_publications = []
 
     for book in books:
 
@@ -214,23 +216,23 @@ def get_preferences(favourites, books, keywords):
         book_year = book[3]
 
         for user_favourite in favourites:
+
             if user_favourite[0] == book_isbn:
 
                 # Add author
-                author.append(book_author)
+                authors.append(book_author)
 
                 # Add year of publication
-                year_of_publication.append(book_year)
+                year_of_publications.append(book_year)
 
                 # Add keywords from titles
                 # Need to move keywords from each favourite book into one list, not three separated
                 for keyword in keywords[book_isbn]:
-                    keywords_in_title.append(keyword)
+                    keywords_in_titles.append(keyword)
 
-    preferences = [author, keywords_in_title, year_of_publication]
-    users_preferences = preferences
+    preferences = [authors, keywords_in_titles, year_of_publications]
 
-    return users_preferences
+    return preferences
 
 
 def get_random_users(users, amount=5):
@@ -243,8 +245,10 @@ def get_random_users(users, amount=5):
     return random_users
 
 
+# Both Jaccard and Dice-coefficient are running through this
 def uniformity(books, users_preferences, keywords, type_of_uniformity):
 
+    # Add the right values
     if type_of_uniformity is "jaccard":
         author_value = 0.4
         keywords_value = 0.2
@@ -276,19 +280,16 @@ def uniformity(books, users_preferences, keywords, type_of_uniformity):
         keywords_from_book = keywords[isbn]
 
         # Check author
-
         if author in user_authors:
             user_result += author_value
 
         # Check keywords
-
         if type_of_uniformity is "jaccard":
             user_result = jaccard(user_result, user_keywords, keywords_from_book, keywords_value)
         else:
             user_result = dice(user_result, user_keywords, keywords_from_book, keywords_value)
 
         # Check year of publication
-
         for user_year in user_years:
             tmp = 1 - (abs(int(year) - int(user_year)) / 2005)
             curr_result = 0
@@ -306,8 +307,10 @@ def jaccard(result, user_keywords, keywords_from_book, keywords_value):
 
     common_keywords = 0
 
+    # Keywords from one set
     keywords_from_both = keywords_from_book.copy()
 
+    # Rest of the keywords
     for keyword in user_keywords:
         if keyword not in keywords_from_both:
             keywords_from_both.append(keyword)
@@ -358,6 +361,7 @@ def suggest_books(books, results):
                 # If the book is already read, don't mind about it
                 if curr_result == 1.0:
                     continue
+
                 # If this user has 10 suggestions
                 elif suggested_counter == 10:
                     # Check if any of the suggestions has lower result value than the current
@@ -381,6 +385,7 @@ def suggest_books(books, results):
 # One file for Jaccard and one file for Dice coefficient
 def write_suggestions(user_index, suggestions, result_type):
 
+    # Create directory named results if it does not exist
     if not os.path.exists("results/"):
         os.makedirs("results/")
 
@@ -415,19 +420,23 @@ def overlap(jaccard_results, dice_results):
     return fraction
 
 
-def sort_golden(goldens):
+# This list isn't sorted because I have to check two variables: Amount of times and result
+def sort_golden(goldens, most_times=2):
 
     sorted_golden = []
 
-    for times in range(2, 0, -1):
+    # First of all, add result that appears many times
+    for times in range(most_times, 0, -1):
         temp_sorted = []
         for golden in goldens:
 
+            # Sort all items of each specific time
             if golden[1] == times:
                 temp_sorted.append(golden)
 
         temp_sorted = sorted(temp_sorted, key=itemgetter(2), reverse=True)
 
+        # Add them all together
         for temp in temp_sorted:
             sorted_golden.append(temp)
 
@@ -446,6 +455,7 @@ def get_golden(jaccard_results, dice_results):
 
         books[curr_isbn] = []
 
+        # In how many favourite lists a book exists
         if curr_isbn in [dice_result[0] for dice_result in dice_results]:
             times += 1
 
@@ -460,6 +470,8 @@ def get_golden(jaccard_results, dice_results):
                 dice_to_be_removed = dice_result
                 goldens.append([dice_result[0], times, dice_result[1]])
                 break
+
+        # Remove it if this book exists in Jaccard too
         if dice_to_be_removed is not None:
             dice_results.remove(dice_to_be_removed)
 
@@ -527,14 +539,15 @@ def main():
     # Keep three random users, not everyone
     users = get_random_users(users)
 
+    # Initialization of every dict
     users_favourites = {}
     preferences = {}
-    results_jaccard = {}
-    results_dice = {}
+    results_jaccard, results_dice = {}, {}
     suggested_books_jaccard, suggested_books_dice = {}, {}
     suggested_results_jaccard, suggested_results_dice = {}, {}
     golden_standard = {}
 
+    # Repeat the whole process for every user
     for user in users:
 
         curr_id = user[0]
