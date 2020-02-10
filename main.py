@@ -164,43 +164,37 @@ def get_keywords_from_title(books):
 
 
 # Get the 3 top rated books for each user
-def get_favourites(book_ratings, users, books):
-    # Dictionary with users' id (key) and their favourite books' ISBN and personal rating (value of list)
-    favourites = {}
+def get_favourites(book_ratings, user_id, books):
 
-    for user in users:
+    # Item in dictionary for every user
+    favourites = []
 
-        user_id = user[0]
+    # Iterate through every rating to find ratings from this specific user
+    for rating in book_ratings:
 
-        # Item in dictionary for every user
-        favourites[user_id] = []
+        # If the rating is from this user
+        if user_id == rating[0]:
 
-        # Iterate through every rating to find ratings from this specific user
-        for rating in book_ratings:
+            # If the book exists
+            if rating[1] in [i[0] for i in books]:
 
-            # If the rating is from this user
-            if user_id == rating[0]:
+                to_be_inserted = [rating[1], rating[2]]
 
-                # If the book exists
-                if rating[1] in [i[0] for i in books]:
+                # Check if the user already has 3 favourites or not
+                if len(favourites) < 3:
 
-                    to_be_inserted = [rating[1], rating[2]]
+                    # If he doesn't, insert this one
+                    favourites.append(to_be_inserted)
+                else:
 
-                    # Check if the user already has 3 favourites or not
-                    if len(favourites[user_id]) < 3:
+                    # if he does, go through these three
+                    for favourite in favourites:
 
-                        # If he doesn't, insert this one
-                        favourites[user_id].append(to_be_inserted)
-                    else:
-
-                        # if he does, go through these three
-                        for favourite in favourites[user_id]:
-
-                            # And check if the current rating is higher than a previous one
-                            if rating[2] > favourite[1]:
-                                favourites[user_id].remove(favourite)
-                                favourites[user_id].append(to_be_inserted)
-                                break
+                        # And check if the current rating is higher than a previous one
+                        if rating[2] > favourite[1]:
+                            favourites.remove(favourite)
+                            favourites.append(to_be_inserted)
+                            break
 
     return favourites
 
@@ -208,36 +202,33 @@ def get_favourites(book_ratings, users, books):
 # Get preferences for each user
 # Favourite authors, years of publication and keywords from titles
 def get_preferences(favourites, books, keywords):
-    users_preferences = {}
 
-    for user_id in favourites:
-        users_preferences[user_id] = []
-        author = []
-        keywords_in_title = []
-        year_of_publication = []
+    author = []
+    keywords_in_title = []
+    year_of_publication = []
 
-        for book in books:
+    for book in books:
 
-            book_isbn = book[0]
-            book_author = book[2]
-            book_year = book[3]
+        book_isbn = book[0]
+        book_author = book[2]
+        book_year = book[3]
 
-            for user_favourite in favourites[user_id]:
-                if user_favourite[0] == book_isbn:
+        for user_favourite in favourites:
+            if user_favourite[0] == book_isbn:
 
-                    # Add author
-                    author.append(book_author)
+                # Add author
+                author.append(book_author)
 
-                    # Add year of publication
-                    year_of_publication.append(book_year)
+                # Add year of publication
+                year_of_publication.append(book_year)
 
-                    # Add keywords from titles
-                    # Need to move keywords from each favourite book into one list, not three separated
-                    for keyword in keywords[book_isbn]:
-                        keywords_in_title.append(keyword)
+                # Add keywords from titles
+                # Need to move keywords from each favourite book into one list, not three separated
+                for keyword in keywords[book_isbn]:
+                    keywords_in_title.append(keyword)
 
-        preferences = [author, keywords_in_title, year_of_publication]
-        users_preferences[user_id] = preferences
+    preferences = [author, keywords_in_title, year_of_publication]
+    users_preferences = preferences
 
     return users_preferences
 
@@ -252,8 +243,7 @@ def get_random_users(users, amount=5):
     return random_users
 
 
-def uniformity(users, books, users_preferences, keywords, type_of_uniformity):
-    results = {}
+def uniformity(books, users_preferences, keywords, type_of_uniformity):
 
     if type_of_uniformity is "jaccard":
         author_value = 0.4
@@ -264,64 +254,52 @@ def uniformity(users, books, users_preferences, keywords, type_of_uniformity):
         keywords_value = 0.5
         year_value = 0.2
 
-    for user in users:
+    # User's results for every book
+    user_results = []
 
-        user_id = user[0]
+    preferences = users_preferences
 
-        # Initialization of result of every user on every book
-        results[user_id] = []
+    # Separate preferences for better understanding of the code
+    user_years = preferences[2]
+    user_keywords = preferences[1]
+    user_authors = preferences[0]
 
-        # User's results for every book
-        user_results = []
+    for book in books:
 
-        preferences = users_preferences[user_id]
+        # User result is equal to 0 for every book before any calculation
+        user_result = 0
 
-        # Separate preferences for better understanding of the code
-        user_years = preferences[2]
-        user_keywords = preferences[1]
-        user_authors = preferences[0]
+        isbn = book[0]
 
-        for book in books:
+        author = book[2]
+        year = book[3]
+        keywords_from_book = keywords[isbn]
 
-            # User result is equal to 0 for every book before any calculation
-            user_result = 0
+        # Check author
 
-            isbn = book[0]
+        if author in user_authors:
+            user_result += author_value
 
-            author = book[2]
-            year = book[3]
-            keywords_from_book = keywords[isbn]
+        # Check keywords
 
-            # Check author
+        if type_of_uniformity is "jaccard":
+            user_result = jaccard(user_result, user_keywords, keywords_from_book, keywords_value)
+        else:
+            user_result = dice(user_result, user_keywords, keywords_from_book, keywords_value)
 
-            if author in user_authors:
-                user_result += author_value
+        # Check year of publication
 
-            # Check keywords
+        for user_year in user_years:
+            tmp = 1 - (abs(int(year) - int(user_year)) / 2005)
+            curr_result = 0
+            if tmp > curr_result:
+                curr_result = tmp
 
-            if type_of_uniformity is "jaccard":
-                user_result = jaccard(user_result, user_keywords, keywords_from_book, keywords_value)
-            else:
-                user_result = dice(user_result, user_keywords, keywords_from_book, keywords_value)
+        user_result += curr_result * year_value
 
-            # Check year of publication
+        user_results.append([isbn, user_result])
 
-            for user_year in user_years:
-                tmp = 1 - (abs(int(year) - int(user_year)) / 2005)
-                curr_result = 0
-                if tmp > curr_result:
-                    curr_result = tmp
-
-            user_result += curr_result * year_value
-
-            # if user_result > 0.8:
-            #     print("ISBN: ", isbn, " with ", user_result)
-
-            user_results.append([isbn, user_result])
-
-        results[user_id] = user_results
-
-    return results
+    return user_results
 
 
 def jaccard(result, user_keywords, keywords_from_book, keywords_value):
@@ -364,42 +342,36 @@ def dice(result, user_keywords, keywords_from_book, keywords_value):
     return result
 
 
-def suggest_books(users, books, results):
-    suggested_results = {}
-    suggested_books = {}
+def suggest_books(books, results):
 
-    for user in users:
+    suggested_results = []
+    suggested_books = []
 
-        user_id = user[0]
+    suggested_counter = 0
 
-        suggested_results[user_id] = []
-        suggested_books[user_id] = []
+    for book in books:
+        for result in results:
+            # If the current result is about this book
+            if result[0] == book[0]:
+                curr_result = result[1]
 
-        suggested_counter = 0
-
-        for book in books:
-            for result in results[user_id]:
-                # If the current result is about this book
-                if result[0] == book[0]:
-                    curr_result = result[1]
-
-                    # If the book is already read, don't mind about it
-                    if curr_result == 1.0:
-                        continue
-                    # If this user has 10 suggestions
-                    elif suggested_counter == 10:
-                        # Check if any of the suggestions has lower result value than the current
-                        for suggested_book in suggested_results[user_id]:
-                            if curr_result > suggested_book[1]:
-                                # suggested_book = result
-                                index = suggested_results[user_id].index(suggested_book)
-                                suggested_results[user_id][index] = result
-                                suggested_books[user_id][index] = book
-                                break
-                    else:
-                        suggested_results[user_id].append(result)
-                        suggested_books[user_id].append(book)
-                        suggested_counter += 1
+                # If the book is already read, don't mind about it
+                if curr_result == 1.0:
+                    continue
+                # If this user has 10 suggestions
+                elif suggested_counter == 10:
+                    # Check if any of the suggestions has lower result value than the current
+                    for suggested_book in suggested_results:
+                        if curr_result > suggested_book[1]:
+                            # suggested_book = result
+                            index = suggested_results.index(suggested_book)
+                            suggested_results[index] = result
+                            suggested_books[index] = book
+                            break
+                else:
+                    suggested_results.append(result)
+                    suggested_books.append(book)
+                    suggested_counter += 1
 
     return suggested_books, suggested_results
 
@@ -407,115 +379,95 @@ def suggest_books(users, books, results):
 # Write suggestions to text files
 # 2 files for each user
 # One file for Jaccard and one file for Dice coefficient
-def write_suggestions(users, suggestions, result_type):
+def write_suggestions(user_index, suggestions, result_type):
 
     if not os.path.exists("results/"):
         os.makedirs("results/")
 
-    for user in users:
+    # Name of the file is the index of user and the type of the uniformity
+    # Example: user-0-jaccard.txt
+    file_name = "user-" + user_index + "-" + result_type + ".txt"
+    data_folder = Path("results/")
+    file_name = data_folder / file_name
 
-        user_id = user[0]
-
-        # Name of the file is the index of user and the type of the uniformity
-        # Example: user-0-jaccard.txt
-        file_name = "user-" + str(users.index(user)) + "-" + result_type + ".txt"
-        data_folder = Path("results/")
-        file_name = data_folder / file_name
-
-        with open(file_name, 'w') as f:
-            for suggestion in suggestions[user_id]:
-                f.write("ISBN: %s \t with title: %s\nAuthor is: %s and year is %s\n" % (
-                    suggestion[0], suggestion[1], suggestion[2], suggestion[3]))
+    with open(file_name, 'w') as f:
+        for suggestion in suggestions:
+            f.write("ISBN: %s \t with title: %s\nAuthor is: %s and year is %s\n" % (
+                suggestion[0], suggestion[1], suggestion[2], suggestion[3]))
 
 
-def overlap(users, jaccard_results, dice_results):
-    fractions = {}
+def overlap(jaccard_results, dice_results):
 
-    for user in users:
+    for i in range(10):
+        books_from_jaccard = []
+        for j in range(i + 1):
+            books_from_jaccard.append(jaccard_results[j][0])
 
-        user_id = user[0]
+        fraction = 0
+        for j in range(i + 1):
+            if dice_results[j][0] in books_from_jaccard:
+                fraction += 1
 
-        for i in range(10):
-            books_from_jaccard = []
-            for j in range(i + 1):
-                books_from_jaccard.append(jaccard_results[user_id][j][0])
+        fraction = fraction / (i + 1)
 
-            fraction = 0
-            for j in range(i + 1):
-                if dice_results[user_id][j][0] in books_from_jaccard:
-                    fraction += 1
+    print(fraction)
 
-            fraction = fraction / (i + 1)
-
-        fractions[user_id] = fraction
-
-        print(fractions[user_id])
-
-    return fractions
+    return fraction
 
 
-def sort_golden(users, goldens):
+def sort_golden(goldens):
 
-    sorted_golden = {}
+    sorted_golden = []
 
-    for user in users:
+    for times in range(2, 0, -1):
+        temp_sorted = []
+        for golden in goldens:
 
-        user_id = user[0]
-        sorted_golden[user_id] = []
+            if golden[1] == times:
+                temp_sorted.append(golden)
 
-        for times in range(2, 0, -1):
-            temp_sorted = []
-            for golden in goldens[user_id]:
+        temp_sorted = sorted(temp_sorted, key=itemgetter(2), reverse=True)
 
-                if golden[1] == times:
-                    temp_sorted.append(golden)
-
-            temp_sorted = sorted(temp_sorted, key=itemgetter(2), reverse=True)
-
-            for temp in temp_sorted:
-                sorted_golden[user_id].append(temp)
+        for temp in temp_sorted:
+            sorted_golden.append(temp)
 
     return sorted_golden
 
 
-def get_golden(users, jaccard_results, dice_results):
-    # [isbn, times, average]
-    goldens = {}
+def get_golden(jaccard_results, dice_results):
 
-    for user in users:
+    goldens = []
+    books = {}
 
-        user_id = user[0]
-        goldens[user_id] = []
-        books = {}
+    for jaccard_result in jaccard_results:
 
-        for jaccard_result in jaccard_results[user_id]:
+        curr_isbn = jaccard_result[0]
+        times = 1
 
-            curr_isbn = jaccard_result[0]
-            times = 1
+        books[curr_isbn] = []
 
-            books[curr_isbn] = []
+        if curr_isbn in [dice_result[0] for dice_result in dice_results]:
+            times += 1
 
-            if curr_isbn in [dice_result[0] for dice_result in dice_results[user_id]]:
-                times += 1
+        for dice_result in dice_results:
 
-            for dice_result in dice_results[user_id]:
+            dice_to_be_removed = None
+            if dice_result[0] == curr_isbn:
+                curr_result = dice_result[1]
+                break
 
-                dice_to_be_removed = None
-                if dice_result[0] == curr_isbn:
-                    curr_result = dice_result[1]
-                    break
+            if times == 1:
+                dice_to_be_removed = dice_result
+                goldens.append([dice_result[0], times, dice_result[1]])
+                break
+        if dice_to_be_removed is not None:
+            dice_results.remove(dice_to_be_removed)
 
-                if times == 1:
-                    dice_to_be_removed = dice_result
-                    goldens[user_id].append([dice_result[0], times, dice_result[1]])
-                    break
-            if dice_to_be_removed is not None:
-                dice_results[user_id].remove(dice_to_be_removed)
+        average_result = (curr_result + jaccard_result[1]) / 2
 
-            average_result = (curr_result + jaccard_result[1]) / 2
+        goldens.append([curr_isbn, times, average_result])
 
-            goldens[user_id].append([curr_isbn, times, average_result])
-    return sort_golden(users, goldens)
+    return sort_golden(goldens)
 
 
 def main():
@@ -575,45 +527,64 @@ def main():
     # Keep three random users, not everyone
     users = get_random_users(users)
 
-    # Find the 3 top rated books for every user
-    users_favourites = get_favourites(book_ratings, users, books)
-    print("Found favourite books for the random users")
+    users_favourites = {}
+    preferences = {}
+    results_jaccard = {}
+    results_dice = {}
+    suggested_books_jaccard, suggested_books_dice = {}, {}
+    suggested_results_jaccard, suggested_results_dice = {}, {}
+    golden_standard = {}
 
-    # Get Data from favourite books for the random users
-    preferences = get_preferences(users_favourites, books, keywords)
-    print("Preferences of random users are created")
-
-    results_jaccard = uniformity(users, books, preferences, keywords, "jaccard")
-    print("Jaccard is done")
-
-    results_dice = uniformity(users, books, preferences, keywords, "dice")
-    print("Dice coefficient is done")
-
-    suggested_books_jaccard, suggested_results_jaccard = suggest_books(users, books, results_jaccard)
-    print("Book suggestions for Jaccard has being done")
-    suggested_books_dice, suggested_results_dice = suggest_books(users, books, results_dice)
-    print("Book suggestions for dice coefficient has being done")
-
-    write_suggestions(users, suggested_books_jaccard, "jaccard")
-    write_suggestions(users, suggested_books_dice, "dice")
-
-    # Experiment 2
-
-    fractions = overlap(users, suggested_results_jaccard, suggested_results_dice)
-    print("Overlapping is done")
-
-    # Experiment 3
-    # temp_dice = suggested_results_dice.copy()
-    temp_dice = {}
     for user in users:
-        temp_dice[user[0]] = suggested_results_dice[user[0]].copy()
 
-    golden_standard = get_golden(users, suggested_results_jaccard, temp_dice)
+        curr_id = user[0]
 
-    overlap(users, suggested_results_jaccard, golden_standard)
-    print("Overlap with golden and jaccard")
-    overlap(users, suggested_results_dice, golden_standard)
-    print("Overlap with golden and dice")
+        users_favourites[curr_id] = []
+        preferences[curr_id] = []
+        results_dice[curr_id], results_jaccard[curr_id] = [], []
+
+        # Find the 3 top rated books for every user
+        users_favourites[curr_id] = get_favourites(book_ratings, curr_id, books)
+        print("Found favourite books for the random users")
+
+        # Get Data from favourite books for the random users
+        preferences[curr_id] = get_preferences(users_favourites[curr_id], books, keywords)
+        print("Preferences of random users are created")
+
+        results_jaccard[curr_id] = uniformity(books, preferences[curr_id], keywords, "jaccard")
+        print("Jaccard is done")
+
+        results_dice[curr_id] = uniformity(books, preferences[curr_id], keywords, "dice")
+        print("Dice coefficient is done")
+
+        suggested_book_jaccard, suggested_result_jaccard = suggest_books(books, results_jaccard[curr_id])
+        suggested_books_jaccard[curr_id] = suggested_book_jaccard
+        suggested_results_jaccard[curr_id] = suggested_result_jaccard
+        print("Book suggestions for Jaccard has being done")
+
+        suggested_book_dice, suggested_result_dice = suggest_books(books, results_dice[curr_id])
+        suggested_books_dice[curr_id] = suggested_book_dice
+        suggested_results_dice[curr_id] = suggested_result_dice
+        print("Book suggestions for dice coefficient has being done")
+
+        write_suggestions(str(users.index(user)), suggested_books_jaccard[curr_id], "jaccard")
+        write_suggestions(str(users.index(user)), suggested_books_dice[curr_id], "dice")
+
+        # Experiment 2
+
+        fractions = overlap(suggested_results_jaccard[curr_id], suggested_results_dice[curr_id])
+        print("Overlapping is done")
+
+        # Experiment 3
+        golden_standard[curr_id] = get_golden(suggested_results_jaccard[curr_id], suggested_results_dice[curr_id].copy())
+
+        overlap(suggested_results_jaccard[curr_id], golden_standard[curr_id])
+        print("Overlap with golden and jaccard")
+        overlap(suggested_results_dice[curr_id], golden_standard[curr_id])
+        print("Overlap with golden and dice")
+
+        print("User", str(users.index(user)), "is done")
+        print("____________________________________________")
 
 
 main()
