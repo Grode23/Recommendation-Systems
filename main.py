@@ -483,26 +483,40 @@ def get_golden(jaccard_results, dice_results):
 
 
 def main():
+
+    directory = "CSV-files/"
+
+    users_file = "BX-Users.csv"
+    books_file = "BX-Books.csv"
+    ratings_file = "BX-Book-Ratings.csv"
+
     # Pre-treatment 1
 
-    if len(sys.argv) == 1:
-        users_file = "users2.csv"
-        books_file = "books2.csv"
-        ratings_file = "ratings.csv"
+    # If there is no arguments
+    if len(sys.argv) == 1 and os.path.exists(directory):
 
-        users = get_from_csv(users_file)
-        books = get_from_csv(books_file)
-        book_ratings = get_from_csv(ratings_file)
-    elif len(sys.argv) == 2 and sys.argv[1] == "start":
+        users = get_from_csv(directory + users_file)
+        books = get_from_csv(directory + books_file)
+        book_ratings = get_from_csv(directory + ratings_file)
+
+    # If argument 'start' exists
+    elif (len(sys.argv) == 2 and sys.argv[1] == "start") or not os.path.exists(directory):
+
+        # Create directory named CSV-files if it does not exist
+        if os.path.exists(directory):
+            users_file = directory + users_file
+            books_file = directory + books_file
+            ratings_file = directory + ratings_file
+        else:
+            # If directory does not exists, files must be in current directory
+            # If not, they probably ran away, good luck, poof
+            os.makedirs(directory)
 
         # I repeat it, because when ratings are removed, some users, still have less than 5 ratings
         # So I need to remove even more users and even more books
         # Eventually I have the right amount of users, books and ratings
         # But just in case, I still check if the book and user of any rating exists furthermore on the project
         for i in range(3):
-            users_file = "BX-Users.csv"
-            books_file = "BX-Books.csv"
-            ratings_file = "BX-Book-Ratings.csv"
 
             users = get_from_csv(users_file)
             books = get_from_csv(books_file)
@@ -510,17 +524,17 @@ def main():
 
             books = remove_books(book_ratings, books)
             print("Books were removed.")
-            write_to_csv(books_file, books)
+            write_to_csv(directory + books_file, books)
             print("Books are saved")
 
             users = remove_users(book_ratings, users)
             print("Users were removed.")
-            write_to_csv(users_file, users)
+            write_to_csv(directory + users_file, users, )
             print("Users are saved")
 
             book_ratings = remove_ratings(book_ratings, books, users)
             print("Ratings were removed")
-            write_to_csv(ratings_file, book_ratings)
+            write_to_csv(directory + ratings_file, book_ratings)
             print("Ratings were saved")
     else:
         print("Wrong argument(s)")
@@ -585,7 +599,7 @@ def main():
 
         # Experiment 2
 
-        fractions = overlap(suggested_results_jaccard[curr_id], suggested_results_dice[curr_id])
+        overlap(suggested_results_jaccard[curr_id], suggested_results_dice[curr_id])
         print("Overlapping is done")
 
         # Experiment 3
