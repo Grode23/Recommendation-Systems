@@ -380,6 +380,22 @@ def suggest_books(books, results):
     return suggested_books, suggested_results
 
 
+# Write overlaps to text files
+# 3 files for each user
+# One file for Jaccard-Dice, one file for Golden-Jaccard and one for Golden-Dice
+def write_overlaps(file_name, overlap, curr_index):
+
+    # Create directory named overlaps if it does not exist
+    if not os.path.exists("overlaps/"):
+        os.makedirs("overlaps/")
+
+    data_folder = Path("overlaps/")
+    file = data_folder / file_name
+
+    with open(file, 'w') as f:
+        f.write("Overlap of user %s is  => %.1f\n" % (curr_index, overlap))
+
+
 # Write suggestions to text files
 # 2 files for each user
 # One file for Jaccard and one file for Dice coefficient
@@ -458,6 +474,8 @@ def get_golden(jaccard_results, dice_results):
         # In how many favourite lists a book exists
         if curr_isbn in [dice_result[0] for dice_result in dice_results]:
             times += 1
+
+        curr_result = 0.0
 
         for dice_result in dice_results:
 
@@ -560,11 +578,14 @@ def main():
     suggested_books_jaccard, suggested_books_dice = {}, {}
     suggested_results_jaccard, suggested_results_dice = {}, {}
     golden_standard = {}
+    overlap_jaccard_dice, overlap_golden_jaccard, overlap_golden_dice = {}, {}, {}
 
     # Repeat the whole process for every user
     for user in users:
 
         curr_id = user[0]
+        my_index = str(users.index(user))
+        print(my_index)
 
         users_favourites[curr_id] = []
         preferences[curr_id] = []
@@ -594,21 +615,30 @@ def main():
         suggested_results_dice[curr_id] = suggested_result_dice
         print("Book suggestions for dice coefficient has being done")
 
-        write_suggestions(str(users.index(user)), suggested_books_jaccard[curr_id], "jaccard")
-        write_suggestions(str(users.index(user)), suggested_books_dice[curr_id], "dice")
+        write_suggestions(my_index, suggested_books_jaccard[curr_id], "jaccard")
+        write_suggestions(my_index, suggested_books_dice[curr_id], "dice")
 
         # Experiment 2
 
-        overlap(suggested_results_jaccard[curr_id], suggested_results_dice[curr_id])
+        overlap_jaccard_dice[curr_id] = overlap(suggested_results_jaccard[curr_id], suggested_results_dice[curr_id])
         print("Overlapping is done")
 
         # Experiment 3
         golden_standard[curr_id] = get_golden(suggested_results_jaccard[curr_id], suggested_results_dice[curr_id].copy())
 
-        overlap(suggested_results_jaccard[curr_id], golden_standard[curr_id])
+        overlap_golden_jaccard[curr_id] = overlap(suggested_results_jaccard[curr_id], golden_standard[curr_id])
         print("Overlap with golden and jaccard")
-        overlap(suggested_results_dice[curr_id], golden_standard[curr_id])
+        overlap_golden_dice[curr_id] = overlap(suggested_results_dice[curr_id], golden_standard[curr_id])
         print("Overlap with golden and dice")
+
+        filename = "user-" + my_index + " jaccard & dice"
+        write_overlaps(filename, overlap_jaccard_dice[curr_id], my_index)
+
+        filename = "user-" + my_index + " golden & jaccard"
+        write_overlaps(filename, overlap_golden_jaccard[curr_id], my_index)
+
+        filename = "user-" + my_index + " golden & dice"
+        write_overlaps(filename, overlap_golden_dice[curr_id], my_index)
 
         print("User", str(users.index(user)), "is done")
         print("____________________________________________")
